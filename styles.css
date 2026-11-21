@@ -320,24 +320,92 @@ p { margin: 0; }
   .modal__box--video { border-radius: 0; align-self: center; }
 }
 
-/* ---------- Mobile: course cards as a cascading, self-rotating carousel (script.js adds .is-deck) ---------- */
-.deck-dots { display: none; }
+/* ---------- Mobile: course cards as expanding tiles (script.js adds the tile heads and .is-tiles) ---------- */
+.tile-head { display: none; }
+.tile-panel, .tile-inner { display: contents; }
 @media (max-width: 719px) {
-  .course-grid.is-deck { display: block; position: relative; padding-right: 28px; touch-action: pan-y; transition: height .45s var(--ease); }
-  .is-deck .course { position: absolute; top: 0; left: 0; width: calc(100% - 28px); transform-origin: 100% 50%;
-    transition: transform .55s var(--ease), opacity .45s var(--ease), filter .45s var(--ease); will-change: transform; user-select: none; -webkit-user-select: none; }
-  .is-deck .course:hover { transform: none; }
-  .is-deck .course:not(.is-front) { max-height: var(--deck-h, none); pointer-events: none; }
-  .is-deck .course[data-pos="0"] { z-index: 4; transform: none; opacity: 1; }
-  .is-deck .course[data-pos="1"] { z-index: 3; transform: translateX(14px) scale(.95); opacity: 1; filter: brightness(.62); }
-  .is-deck .course[data-pos="2"] { z-index: 2; transform: translateX(28px) scale(.9); opacity: .8; filter: brightness(.42); }
-  .is-deck .course[data-pos="3"] { z-index: 1; transform: translateX(28px) scale(.9); opacity: 0; }
-  .is-deck .course[data-pos="-1"] { z-index: 5; transform: translateX(-115%) rotate(-6deg); opacity: 0; }
-  .is-deck .course.is-dragging { transition: none; }
-  .deck-dots { display: flex; justify-content: center; gap: 8px; margin-top: 18px; }
-  .deck-dots button { width: 8px; height: 8px; padding: 0; border: 0; border-radius: 999px; background: var(--line); cursor: pointer; transition: width .3s var(--ease), background .3s; }
-  .deck-dots button.is-on { width: 26px; background: var(--gold); }
+  .course-grid.is-tiles { gap: 12px; }
+  .is-tiles .course { position: relative; }
+  .is-tiles .course:hover { transform: none; }
+  .is-tiles .tile-head { position: relative; display: flex; align-items: center; gap: 12px; width: 100%; min-height: 92px; max-height: 160px; padding: 16px 16px 16px 18px;
+    border: 0; background: #000; color: #fff; text-align: left; font: inherit; cursor: pointer; overflow: hidden;
+    transition: max-height .5s var(--ease), min-height .5s var(--ease), padding .5s var(--ease), opacity .3s; }
+  .tile-head__bg { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: .55; transition: transform .6s var(--ease); }
+  .is-tiles .tile-head::after { content: ""; position: absolute; inset: 0; background: linear-gradient(90deg, rgba(10,10,11,.95) 0%, rgba(10,10,11,.8) 55%, rgba(10,10,11,.45) 100%); }
+  .tile-head > span { position: relative; z-index: 1; }
+  .tile-head__txt { flex: 1; min-width: 0; display: grid; gap: 2px; }
+  .tile-head__txt small { font-size: 11px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--gold); }
+  .tile-head__txt b { font-family: var(--f-head); font-size: 18px; line-height: 1.2; font-weight: 700; letter-spacing: -.01em; }
+  .tile-head__price { font-style: normal; font-size: 14px; font-weight: 600; color: rgba(255,255,255,.78); margin-top: 2px; }
+  .tile-head__ico { flex: none; display: grid; place-items: center; width: 32px; height: 32px; border-radius: 50%; border: 1px solid color-mix(in srgb, var(--gold) 60%, transparent); color: var(--gold); }
+  .tile-head__ico svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 2.4; stroke-linecap: round; }
+  .is-tiles .tile-panel { display: grid; grid-template-rows: 0fr; transition: grid-template-rows .5s var(--ease); }
+  .is-tiles .tile-inner { display: flex; flex-direction: column; min-height: 0; overflow: hidden; }
+  .is-tiles .course.is-open .tile-panel { grid-template-rows: 1fr; }
+  .is-tiles .course.is-open .tile-head { min-height: 0; max-height: 0; padding-top: 0; padding-bottom: 0; opacity: 0; pointer-events: none; }
+  /* while the tiles open by themselves, a thin gold bar runs along the top of the open card */
+  .is-tiles.is-auto .course.is-open::before { content: ""; position: absolute; z-index: 3; top: 0; left: 0; height: 3px; width: 100%; background: var(--gold); transform-origin: 0 50%; animation: tile-timer var(--tile-ms, 6s) linear forwards; }
 }
+@keyframes tile-timer { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+
+/* ---------- Mobile, option B: course cards as an expanding bento box (index.html?cards=bento, or <html data-cards="bento">) ---------- */
+.tile-close { display: none; }
+@media (max-width: 719px) {
+  .course-grid.is-bento { grid-template-columns: 1fr 1fr; gap: 10px; }
+  .is-bento .course { position: relative; grid-column: span 1; min-width: 0; transition: border-color .5s, box-shadow .5s; }
+  .is-bento .course:hover { transform: none; }
+  .is-bento .course[data-size="big"], .is-bento .course[data-size="wide"], .is-bento .course.is-open { grid-column: 1 / -1; }
+  .is-bento .course.is-open { order: -1; }
+  .is-bento .tile-panel { display: none; }
+  .is-bento .course.is-open .tile-panel { display: block; }
+  .is-bento .tile-inner { display: flex; flex-direction: column; }
+  .is-bento .course.is-open .tile-head { display: none; }
+
+  .is-bento .tile-head { position: relative; display: flex; flex-direction: column; justify-content: flex-end; align-items: flex-start; gap: 0; width: 100%; height: 100%;
+    min-height: 186px; padding: 14px; border: 0; background: #000; color: #fff; text-align: left; font: inherit; cursor: pointer; overflow: hidden; }
+  .is-bento .course[data-size="big"] .tile-head { min-height: 250px; padding: 18px; }
+  .is-bento .course[data-size="wide"] .tile-head { min-height: 128px; }
+  .is-bento .tile-head__bg { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; object-position: top; opacity: .85; transition: transform .6s var(--ease); }
+  .is-bento .tile-head:active .tile-head__bg { transform: scale(1.05); }
+  .is-bento .tile-head::after { content: ""; position: absolute; inset: 0; background: linear-gradient(180deg, rgba(10,10,11,.1) 0%, rgba(10,10,11,.7) 38%, rgba(10,10,11,.97) 62%); }
+  .is-bento .course[data-size="wide"] .tile-head::after { background: linear-gradient(90deg, rgba(10,10,11,.96) 0%, rgba(10,10,11,.8) 55%, rgba(10,10,11,.3) 100%); }
+  .is-bento .tile-head > span { position: relative; z-index: 1; }
+  .is-bento .tile-head__txt { display: grid; align-content: end; gap: 3px; width: 100%; padding-right: 4px; }
+  .tile-head__txt small i { font-style: normal; }
+  .is-bento .course[data-size="half"] .tile-head__txt small i { display: none; }
+  .is-bento .tile-head__txt small { font-size: 10.5px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--gold); }
+  .is-bento .tile-head__txt b { font-family: var(--f-head); font-size: 16px; line-height: 1.2; font-weight: 700; letter-spacing: -.01em; }
+  .is-bento .course[data-size="big"] .tile-head__txt b { font-size: 22px; }
+  .is-bento .course[data-size="wide"] .tile-head__txt b { font-size: 18px; }
+  .is-bento .tile-head__price { font-style: normal; font-size: 13.5px; font-weight: 600; color: rgba(255,255,255,.8); margin-top: 2px; }
+  .is-bento .tile-head > .tile-head__ico { position: absolute; top: 12px; right: 12px; display: grid; place-items: center; width: 32px; height: 32px; border-radius: 50%;
+    background: rgba(10,10,11,.55); backdrop-filter: blur(6px); border: 1px solid color-mix(in srgb, var(--gold) 60%, transparent); color: var(--gold); }
+  .is-bento .tile-head__ico svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 2.4; stroke-linecap: round; }
+  /* a soft gold glow moves from tile to tile until the visitor taps one */
+  .is-bento .course.is-hint { border-color: var(--gold); box-shadow: var(--shadow), 0 0 0 4px color-mix(in srgb, var(--gold) 22%, transparent); }
+
+  .is-bento .course.is-open .tile-close { position: absolute; z-index: 4; top: 12px; left: 12px; display: grid; place-items: center; width: 36px; height: 36px; padding: 0; border-radius: 50%;
+    border: 1px solid rgba(255,255,255,.25); background: rgba(10,10,11,.6); backdrop-filter: blur(6px); color: #fff; cursor: pointer; }
+  .tile-close svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 2.4; stroke-linecap: round; }
+
+  /* the open card, kept short */
+  .is-bento .course.is-open .course__video { aspect-ratio: 16 / 8; }
+  .is-bento .course.is-open .course__body { gap: 12px; padding: 16px 18px 18px; }
+  .is-bento .course.is-open .course__name { font-size: 20px; }
+  .is-bento .course.is-open .course__desc { font-size: 14px; line-height: 1.5; }
+  .is-bento .course.is-open .course__points { gap: 6px; font-size: 14px; }
+  .is-bento .course.is-open .course__points li { padding-left: 26px; }
+  .is-bento .course.is-open .course__points li::before { top: 2px; }
+  .is-bento .course.is-open .course__perk, .is-bento .course.is-open .course__for { padding: 9px 12px; font-size: 13.5px; }
+  .is-bento .course.is-open .course__for span { display: inline; margin: 0 6px 0 0; }
+  .is-bento .course.is-open .mode__btn span { display: none; }
+  .is-bento .course.is-open .mode__btn { padding-top: 9px; padding-bottom: 9px; }
+  .is-bento .course.is-open .price { padding-top: 12px; }
+  .is-bento .course.is-open .price__now { font-size: 28px; }
+  .is-bento .course.is-open .btn--block { height: 48px; }
+  .is-bento .course.is-open .course__brochure { height: 42px; }
+}
+::view-transition-group(*) { animation-duration: .45s; animation-timing-function: cubic-bezier(.2,.7,.2,1); }
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; scroll-behavior: auto !important; }

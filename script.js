@@ -62,105 +62,95 @@
     $$(":scope > *", t).forEach((n) => { const c = n.cloneNode(true); c.setAttribute("aria-hidden", "true"); t.appendChild(c); });
   });
 
-  /* ---------- Mobile: course cards as a cascading deck (swipe, or it turns by itself) ---------- */
+  /* ---------- Mobile course cards, two designs, chosen by <html data-cards="..."> (or ?cards=... to preview):
+       bento (in use): a bento box of tiles; the tapped one opens full width on top
+       tiles: one card open, the rest folded; they open in turn until the visitor taps ---------- */
   const grid = $(".course-grid");
   if (grid) {
-    const cards = $$(":scope > .course", grid), n = cards.length;
+    const cards = $$(":scope > .course", grid);
     const mq = matchMedia("(max-width: 719px)");
     const calm = matchMedia("(prefers-reduced-motion: reduce)").matches || params.has("render");
-    const AUTO_MS = 5000, IDLE_MS = 9000;
-    let cur = 0, on = false, timer = null, idle = null, inView = true;
+    const bento = (params.get("cards") || root.dataset.cards) === "bento";   // ?cards=tiles previews the other design
+    const modeClass = bento ? "is-bento" : "is-tiles";
+    const AUTO_MS = bento ? 2200 : 6000;
+    let cur = bento ? -1 : 0, hint = -1, on = false, timer = null, inView = false, touched = false;
+    grid.style.setProperty("--tile-ms", AUTO_MS + "ms");
 
-    const dots = document.createElement("div");
-    dots.className = "deck-dots";
-    dots.innerHTML = cards.map((c, i) => `<button type="button" aria-label="Show ${$(".course__name", c).textContent}"></button>`).join("");
-    grid.after(dots);
-
-    const fit = () => {
-      if (!on) return;
-      const h = cards[cur].offsetHeight;
-      grid.style.height = h + "px";
-      grid.style.setProperty("--deck-h", h + "px");
-    };
-    const ro = new ResizeObserver(fit);
-    const layout = () => {
-      cards.forEach((c, i) => {
-        const p = (i - cur + n) % n;
-        c.dataset.pos = p;
-        c.classList.toggle("is-front", p === 0);
-        c.inert = p !== 0;
+    const apply = (i) => {
+      cur = i;
+      const closed = cards.filter((c, k) => k !== i);
+      const sizes = i < 0 ? ["big", "half", "half", "wide"] : ["wide", "half", "half"]; // bento layout for the folded tiles
+      cards.forEach((c, k) => {
+        const isOpen = k === i;
+        c.classList.toggle("is-open", isOpen);
+        $(".tile-head", c).setAttribute("aria-expanded", isOpen);
+        $(".tile-inner", c).inert = on && !isOpen;
+        if (bento && on) c.dataset.size = isOpen ? "open" : sizes[closed.indexOf(c)] || "half";
       });
-      $$("button", dots).forEach((d, i) => { d.classList.toggle("is-on", i === cur); d.setAttribute("aria-current", i === cur); });
-      ro.disconnect(); ro.observe(cards[cur]); fit();
     };
-    const go = (dir) => {
-      if (dir > 0) {
-        const old = cards[cur];
-        cur = (cur + 1) % n; layout();
-        old.dataset.pos = "-1";                                  // the front card flies off to the left...
-        setTimeout(() => { if (on && old.dataset.pos === "-1") old.dataset.pos = (cards.indexOf(old) - cur + n) % n; }, 600); // ...then goes to the back
-      } else {
-        cur = (cur - 1 + n) % n;
-        const inc = cards[cur];
-        inc.classList.add("is-dragging"); inc.dataset.pos = "-1"; void inc.offsetWidth; // come back in from the left
-        inc.classList.remove("is-dragging"); layout();
-      }
+    const open = (i, byUser) => {
+      if (bento && on && byUser && document.startViewTransition && !calm) {
+        cards.forEach((c, k) => { c.style.viewTransitionName = "course-" + k; });
+        document.startViewTransition(() => apply(i)).finished.finally(() => cards.forEach((c) => { c.style.viewTransitionName = ""; }));
+      } else apply(i);
+      if (byUser) setTimeout(() => {                          // keep the opened card in view
+        const el = bento ? grid : cards[i];
+        const top = el.getBoundingClientRect().top;
+        if (top < 0 || top > innerHeight * .6) scrollTo({ top: scrollY + top - 90, behavior: "smooth" });
+      }, bento ? 480 : 520);
     };
-
-    const stop = () => { clearInterval(timer); timer = null; };
+    const setHint = (k) => { hint = k; cards.forEach((c, j) => c.classList.toggle("is-hint", j === k)); };
+    const stop = () => { clearInterval(timer); timer = null; grid.classList.remove("is-auto"); setHint(-1); };
     const play = () => {
       stop();
-      if (on && !calm && inView && !document.hidden && vModal.hidden) timer = setInterval(() => go(1), AUTO_MS);
-    };
-    const nudge = () => { stop(); clearTimeout(idle); idle = setTimeout(play, IDLE_MS); }; // user touched it: wait, then carry on
-    new IntersectionObserver(([e]) => { inView = e.isIntersecting; inView ? play() : stop(); }, { threshold: .35 }).observe(grid);
-    document.addEventListener("visibilitychange", play);
-    new MutationObserver(() => (vModal.hidden ? nudge() : stop())).observe(vModal, { attributes: true, attributeFilter: ["hidden"] });
-
-    dots.addEventListener("click", (e) => {
-      const i = $$("button", dots).indexOf(e.target.closest("button"));
-      if (i < 0 || i === cur) return;
-      cur = i; layout(); nudge();
-    });
-
-    /* swipe */
-    let sx = 0, sy = 0, dx = 0, drag = false, down = false, moved = false;
-    grid.addEventListener("pointerdown", (e) => {
-      if (!on || !e.isPrimary || (e.pointerType === "mouse" && e.button !== 0)) return;
-      down = true; drag = false; moved = false; sx = e.clientX; sy = e.clientY; dx = 0; nudge();
-    });
-    grid.addEventListener("pointermove", (e) => {
-      if (!down) return;
-      dx = e.clientX - sx;
-      const dy = e.clientY - sy;
-      if (!drag) {
-        if (Math.abs(dx) < 8 || Math.abs(dx) < Math.abs(dy)) return;
-        drag = moved = true; cards[cur].classList.add("is-dragging");
-        try { grid.setPointerCapture(e.pointerId); } catch {}
+      if (!on || calm || touched || !inView || document.hidden || !vModal.hidden) return;
+      grid.classList.add("is-auto");
+      if (bento) {                                            // bento: a gold glow walks across the tiles
+        setHint(0);
+        timer = setInterval(() => setHint((hint + 1) % cards.length), AUTO_MS);
+        return;
       }
-      cards[cur].style.transform = `translateX(${dx}px) rotate(${dx / 30}deg)`;
-    });
-    const end = () => {
-      if (!down) return;
-      down = false;
-      if (!drag) return;
-      drag = false;
-      const f = cards[cur];
-      f.classList.remove("is-dragging"); f.style.transform = "";
-      if (dx < -50) go(1); else if (dx > 50) go(-1);
+      open(cur, false);                                       // tiles: restarts the gold timer bar
+      timer = setInterval(() => open((cur + 1) % cards.length, false), AUTO_MS);
     };
-    grid.addEventListener("pointerup", end);
-    grid.addEventListener("pointercancel", end);
-    grid.addEventListener("click", (e) => { if (moved) { e.preventDefault(); e.stopPropagation(); moved = false; } }, true);
-    grid.addEventListener("focusin", stop);
+    const stopForGood = () => { touched = true; stop(); };
+
+    // A compact head for each card, and a wrapper round the video + body so the card can fold open
+    cards.forEach((c, i) => {
+      const [t1, t2] = $$(".course__tags .tag", c).map((t) => t.textContent.trim()).filter((t) => !/flagship/i.test(t));
+      const tags = t1 + (t2 ? `<i> · ${t2}</i>` : "");
+      const nows = $$(".mode__btn", c).map((b) => +b.dataset.now);
+      const price = nows.length ? "From " + inr(Math.min(...nows)) : $(".price__now", c).textContent.trim();
+      const head = document.createElement("button");
+      head.type = "button"; head.className = "tile-head";
+      head.innerHTML = `<img class="tile-head__bg" src="${$(".course__video img", c).getAttribute("src")}" alt="" loading="lazy" />
+        <span class="tile-head__txt"><small>${tags}</small><b>${$(".course__name", c).textContent}</b><em class="tile-head__price">${price}</em></span>
+        <span class="tile-head__ico"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></span>`;
+      const panel = document.createElement("div"), inner = document.createElement("div");
+      panel.className = "tile-panel"; inner.className = "tile-inner";
+      inner.append(...c.children); panel.append(inner); c.append(head, panel);
+      head.addEventListener("click", () => { stopForGood(); open(i, true); });
+      if (bento) {
+        const x = document.createElement("button");
+        x.type = "button"; x.className = "tile-close"; x.setAttribute("aria-label", "Close " + $(".course__name", c).textContent);
+        x.innerHTML = `<svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg>`;
+        x.addEventListener("click", () => { stopForGood(); open(-1, true); });
+        c.append(x);
+      }
+    });
+
+    grid.addEventListener("pointerdown", stopForGood, { passive: true });
+    grid.addEventListener("focusin", stopForGood);
+    new IntersectionObserver(([e]) => { inView = e.isIntersecting; play(); }, { threshold: .3 }).observe(grid);
+    document.addEventListener("visibilitychange", play);
+    new MutationObserver(play).observe(vModal, { attributes: true, attributeFilter: ["hidden"] });
 
     const setMode = () => {
       on = mq.matches;
-      grid.classList.toggle("is-deck", on);
-      if (on) { layout(); play(); return; }
-      stop(); ro.disconnect();
-      grid.style.height = ""; grid.style.removeProperty("--deck-h");
-      cards.forEach((c) => { delete c.dataset.pos; c.classList.remove("is-front", "is-dragging"); c.inert = false; c.style.transform = ""; });
+      grid.classList.toggle(modeClass, on);
+      if (on) { apply(cur); play(); return; }
+      stop();
+      cards.forEach((c) => { $(".tile-inner", c).inert = false; delete c.dataset.size; });
     };
     mq.addEventListener("change", setMode);
     setMode();
