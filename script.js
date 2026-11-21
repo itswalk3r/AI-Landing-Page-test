@@ -46,6 +46,8 @@
       $$(".mode__btn", group).forEach((x) => { x.classList.toggle("is-on", x === b); x.setAttribute("aria-checked", x === b); });
       $("[data-price-now]", card).textContent = inr(b.dataset.now);
       $("[data-price-was]", card).textContent = inr(b.dataset.was);
+      const off = $("[data-price-off]", card);
+      if (off) off.textContent = Math.floor((b.dataset.was - b.dataset.now) / b.dataset.was * 100) + "% off · First 25 seats only";
       Object.assign($(".js-apply", card).dataset, { mode: b.dataset.mode, was: b.dataset.was, now: b.dataset.now });
     }));
   });
