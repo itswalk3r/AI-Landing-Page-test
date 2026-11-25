@@ -291,12 +291,72 @@
     </div>
   </section>
 
-  <!-- ================= TESTIMONIALS (hidden until the student videos are ready: remove this comment wrapper to show it) =================
-  <section class="stories band" data-band="stories" id="stories">
+  <!-- ================= TESTIMONIALS (student videos; same as testimonials-section.html) ================= -->
+  <section class="sr-stories" id="stories">
+    <style>
+      .sr-stories { --gold:#F2C230; --gold-ink:#141414; --pastel:#CBBFFF; --bg:#0F0F11; --bg-2:#121214; --card:#141417; --text:#F6F2E9; --muted:#A29E95;
+        --line:rgba(255,255,255,.09); --radius:20px; --shadow:0 1px 0 rgba(255,255,255,.04) inset, 0 20px 40px -20px rgba(0,0,0,.6); --ease:cubic-bezier(.2,.7,.2,1);
+        --f-head:"Sora", system-ui, sans-serif; --f-body:"Inter", system-ui, sans-serif;
+        background:var(--bg); color:var(--text); font:16px/1.6 var(--f-body); padding:clamp(72px, 9vw, 112px) 0; -webkit-font-smoothing:antialiased; }
+      .sr-stories *, .sr-stories *::before, .sr-stories *::after { box-sizing:border-box; }
+      .sr-stories button { font:inherit; color:inherit; cursor:pointer; border:0; background:none; padding:0; }
+      .sr-stories .wrap { max-width:1200px; margin:0 auto; padding:0 24px; }
+      .sr-stories .ico { width:20px; height:20px; fill:none; stroke:currentColor; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; }
+
+      .sr-stories .head { display:flex; align-items:end; justify-content:space-between; gap:20px; margin-bottom:44px; }
+      .sr-stories .head > div:first-child { display:grid; gap:12px; }
+      .sr-stories .eyebrow { display:inline-block; border:0; border-radius:0; background:none; padding:0; color:var(--gold); text-transform:uppercase; letter-spacing:.12em; font-size:12px; font-weight:600; }
+      .sr-stories h2 { margin:0; font:700 clamp(28px, 3.6vw, 44px)/1.12 var(--f-head); letter-spacing:-.02em; }
+      .sr-stories .slider-nav { display:flex; gap:10px; }
+      .sr-stories .round { width:48px; height:48px; border-radius:50%; border:1.5px solid var(--line); display:grid; place-items:center; color:var(--text); transition:border-color .2s, background .2s, opacity .2s; }
+      .sr-stories .round:hover { border-color:var(--gold); background:var(--gold); color:var(--gold-ink); }
+      .sr-stories .round:disabled { opacity:.35; pointer-events:none; }
+
+      .sr-stories .track { display:grid; grid-auto-flow:column; grid-auto-columns:calc((100% - 3 * 20px) / 4); gap:20px; overflow-x:auto; scroll-snap-type:x mandatory;
+        scroll-behavior:smooth; scrollbar-width:none; padding-bottom:4px; }
+      .sr-stories .track::-webkit-scrollbar { display:none; }
+      .sr-stories .story { position:relative; aspect-ratio:9 / 14; border-radius:var(--radius); overflow:hidden; scroll-snap-align:start; text-align:left; background:#000;
+        border:1px solid var(--line); box-shadow:var(--shadow); }
+      .sr-stories .story img { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; transition:transform .6s var(--ease); }
+      .sr-stories .story:hover img { transform:scale(1.04); }
+      .sr-stories .story::after { content:""; position:absolute; inset:0; background:linear-gradient(180deg, transparent 50%, rgba(0,0,0,.55)); pointer-events:none; }
+      .sr-stories .play { position:absolute; z-index:1; left:50%; top:50%; width:54px; height:54px; margin:-27px 0 0 -27px; border-radius:50%; background:rgba(255,255,255,.92);
+        display:grid; place-items:center; box-shadow:0 10px 30px rgba(0,0,0,.35); transition:transform .3s var(--ease); }
+      .sr-stories .play svg { width:22px; height:22px; fill:#111; margin-left:3px; }
+      .sr-stories .play::before { display:none; }
+      .sr-stories .story:hover .play { transform:scale(1.08); }
+      .sr-stories .story__meta { position:absolute; z-index:1; left:12px; right:12px; bottom:12px; padding:12px 14px; border-radius:14px; background:var(--card); box-shadow:var(--shadow); display:grid; }
+      .sr-stories .story__meta b { font-family:var(--f-head); font-size:15px; }
+      .sr-stories .story__meta small { color:var(--muted); font-size:12.5px; }
+      .sr-stories .dots { display:flex; justify-content:center; gap:8px; margin-top:28px; }
+      .sr-stories .dots i { width:8px; height:8px; border-radius:99px; background:var(--line); transition:width .3s var(--ease), background .3s; }
+      .sr-stories .dots i.is-on { width:28px; background:var(--gold); }
+      .sr-stories .dots:empty, .sr-stories .slider-nav[hidden] { display:none; }
+
+      /* video player pop-up */
+      .sr-stories .sr-modal { position:fixed; inset:0; z-index:1000; display:grid; place-items:center; padding:20px; }
+      .sr-stories .sr-modal[hidden] { display:none; }
+      .sr-stories .sr-modal__scrim { position:absolute; inset:0; background:rgba(5,5,6,.8); backdrop-filter:blur(6px); }
+      .sr-stories .sr-modal__box { position:relative; height:min(86dvh, 760px); aspect-ratio:9 / 16; max-width:100%; border-radius:20px; overflow:hidden; background:#000; box-shadow:0 40px 80px -20px rgba(0,0,0,.6); }
+      .sr-stories .sr-modal__box iframe { width:100%; height:100%; border:0; display:block; }
+      .sr-stories .sr-modal__x { position:absolute; top:12px; right:12px; z-index:2; width:40px; height:40px; border-radius:50%; display:grid; place-items:center; background:rgba(20,20,23,.7); color:#fff; }
+
+      @media (max-width: 1099px) { .sr-stories .track { grid-auto-columns:calc((100% - 2 * 20px) / 3); } }
+      @media (max-width: 719px) {
+        .sr-stories .wrap { padding:0 16px; }
+        .sr-stories .head { flex-direction:column; align-items:start; margin-bottom:28px; }
+        .sr-stories .slider-nav { display:none; }
+        .sr-stories .track { grid-auto-columns:72%; gap:14px; }
+        .sr-stories .sr-modal { padding:0; }
+        .sr-stories .sr-modal__box { height:100dvh; width:100%; aspect-ratio:auto; border-radius:0; }
+      }
+      @media (prefers-reduced-motion: reduce) { .sr-stories * { transition:none !important; scroll-behavior:auto !important; } }
+    </style>
+
     <div class="wrap">
-      <div class="head head--row">
+      <div class="head">
         <div>
-          <span class="eyebrow eyebrow--plain">Student stories</span>
+          <span class="eyebrow">Student stories</span>
           <h2>Hear it from our students</h2>
         </div>
         <div class="slider-nav">
@@ -305,42 +365,81 @@
         </div>
       </div>
 
-      <div class="stories__track" id="storiesTrack">
-        <button class="story" data-video="" data-title="Student testimonial">
-          <span class="story__ph">Placeholder<br /><small>Student video</small></span>
-          <span class="play play--sm"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></span>
-          <span class="story__meta"><b>Student name</b><small>AI Video Production Masterclass</small></span>
+      <!-- One <button class="story"> per video: set data-yt to the YouTube video id (the part after /shorts/) -->
+      <div class="track">
+        <button class="story" type="button" data-yt="NsS85rIUWVo" aria-label="Play Adarsh's testimonial">
+          <img src="https://i.ytimg.com/vi/NsS85rIUWVo/oar2.jpg" onerror="this.onerror=null;this.src=this.src.replace('oar2','hqdefault')" alt="" loading="lazy" />
+          <span class="play"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></span>
+          <span class="story__meta"><b>Adarsh</b><small>Video editor</small></span>
         </button>
-        <button class="story" data-video="" data-title="Student testimonial">
-          <span class="story__ph">Placeholder<br /><small>Student video</small></span>
-          <span class="play play--sm"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></span>
-          <span class="story__meta"><b>Student name</b><small>AI Video Creator Lab</small></span>
-        </button>
-        <button class="story" data-video="" data-title="Student testimonial">
-          <span class="story__ph">Placeholder<br /><small>Student video</small></span>
-          <span class="play play--sm"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></span>
-          <span class="story__meta"><b>Student name</b><small>AI Workflow Pro</small></span>
-        </button>
-        <button class="story" data-video="" data-title="Student testimonial">
-          <span class="story__ph">Placeholder<br /><small>Student video</small></span>
-          <span class="play play--sm"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></span>
-          <span class="story__meta"><b>Student name</b><small>AI Video Production Masterclass</small></span>
-        </button>
-        <button class="story" data-video="" data-title="Student testimonial">
-          <span class="story__ph">Placeholder<br /><small>Student video</small></span>
-          <span class="play play--sm"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></span>
-          <span class="story__meta"><b>Student name</b><small>AI Video Creator Lab</small></span>
-        </button>
-        <button class="story" data-video="" data-title="Student testimonial">
-          <span class="story__ph">Placeholder<br /><small>Student video</small></span>
-          <span class="play play--sm"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></span>
-          <span class="story__meta"><b>Student name</b><small>AI Workflow Pro</small></span>
+        <button class="story" type="button" data-yt="CXOUTqS1DTw" aria-label="Play Ajay's testimonial">
+          <img src="https://i.ytimg.com/vi/CXOUTqS1DTw/oar2.jpg" onerror="this.onerror=null;this.src=this.src.replace('oar2','hqdefault')" alt="" loading="lazy" />
+          <span class="play"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></span>
+          <span class="story__meta"><b>Ajay</b><small>Video editor</small></span>
         </button>
       </div>
-      <div class="dots" id="storiesDots" aria-hidden="true"></div>
+      <div class="dots" aria-hidden="true"></div>
     </div>
+
+    <div class="sr-modal" hidden>
+      <div class="sr-modal__scrim" data-close></div>
+      <div class="sr-modal__box">
+        <button class="sr-modal__x" type="button" data-close aria-label="Close"><svg class="ico" viewBox="0 0 24 24"><path d="M18 6 6 18M6 6l12 12"/></svg></button>
+      </div>
+    </div>
+
+    <script>
+      (() => {
+        const root = document.currentScript.closest(".sr-stories");
+        const $ = (s) => root.querySelector(s), $$ = (s) => [...root.querySelectorAll(s)];
+        const track = $(".track"), dotsEl = $(".dots"), nav = $(".slider-nav"), cards = $$(".story");
+
+        /* slider: arrows and dots show only when there are more videos than fit */
+        const step = () => cards.length > 1 ? cards[1].offsetLeft - cards[0].offsetLeft : track.clientWidth;
+        const pages = () => Math.max(1, Math.round((track.scrollWidth - track.clientWidth) / step()) + 1);
+        const sync = () => {
+          const i = Math.round(track.scrollLeft / step());
+          dotsEl.querySelectorAll("i").forEach((d, k) => d.classList.toggle("is-on", k === i));
+          const [prev, next] = $$(".round");
+          prev.disabled = track.scrollLeft < 4;
+          next.disabled = track.scrollLeft + track.clientWidth >= track.scrollWidth - 4;
+        };
+        const layout = () => {
+          const n = pages();
+          nav.hidden = n < 2;
+          dotsEl.innerHTML = n < 2 ? "" : "<i></i>".repeat(n);
+          sync();
+        };
+        $$("[data-slide]").forEach((b) => b.addEventListener("click", () => track.scrollBy({ left: +b.dataset.slide * step() })));
+        track.addEventListener("scroll", () => requestAnimationFrame(sync), { passive: true });
+        addEventListener("resize", layout);
+        layout();
+
+        /* tap a story: play it in a pop-up */
+        const modal = $(".sr-modal"), box = $(".sr-modal__box");
+        let last = null;
+        const close = () => {
+          modal.hidden = true; document.body.style.overflow = "";
+          const f = box.querySelector("iframe"); if (f) f.remove();
+          last && last.focus();
+        };
+        cards.forEach((c) => c.addEventListener("click", () => {
+          last = c;
+          const f = document.createElement("iframe");
+          f.src = "https://www.youtube-nocookie.com/embed/" + c.dataset.yt + "?autoplay=1&playsinline=1&rel=0&modestbranding=1";
+          f.title = c.getAttribute("aria-label").replace("Play ", "");
+          f.allow = "autoplay; encrypted-media; picture-in-picture; fullscreen";
+          f.allowFullscreen = true;
+          box.appendChild(f);
+          modal.hidden = false; document.body.style.overflow = "hidden";
+          setTimeout(() => $(".sr-modal__x").focus(), 50);
+        }));
+        $$("[data-close]").forEach((b) => b.addEventListener("click", close));
+        addEventListener("keydown", (e) => { if (e.key === "Escape" && !modal.hidden) close(); });
+      })();
+    </script>
   </section>
-  ================= END TESTIMONIALS ================= -->
+  <!-- ================= END TESTIMONIALS ================= -->
 </main>
 
 
